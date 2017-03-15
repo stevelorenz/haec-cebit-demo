@@ -1,9 +1,9 @@
 #!/usr/bin/python2
 # -*- coding: utf-8 -*-
 """
-# About  : Grid network with 3 layers
-
+# About  : Multi-layer grid network with square topo of hosts in each layer.
 """
+
 import random
 import re
 from math import log
@@ -11,7 +11,9 @@ from math import log
 from mininet.topo import Topo
 
 
-# === Functions ===
+####################
+#  Util Functions  #
+####################
 
 def rand_byte():
     """Generater a random byte"""
@@ -70,137 +72,76 @@ def make_ip(host_index, ip_class='B'):
     return host_ip
 
 
-# === Topology  ===
+##############
+#  Topology  #
+##############
 
-class FatTreeBinary(Topo):
-    """Binary fat tree topology
+class MultilayerGrid(Topo):
+    """Multi-layer grid network with square topo of hosts in each layer."""
 
+    def __init__(self, width=3, layer_num=3, **args):
+        """Init function for FatTreeBinary class."""
 
-    Default using B class private IP for virtual hosts
-    network addr: 172.16.0.0, support maximal 65534 hosts
+        Topo.__init__(self, **args)
 
-    Attributes:
-        para_dict (dict): dictionary of topology parameters
-            host_num, switch_num, host_bw, link_delay, link_loss, link_jitter
-    """
+        self.h_index = 1
+        self.s_index = 1
 
-    def __init__(self, host_num=2, host_bw=10, delay=10,
-                 loss=0, jitter=0, **opts):
-        """Init function for FatTreeBinary class
+        # Only switches should be accessed
+        # Each value is a list of switches in one layer.
+        self.s_dict = {}
 
-        Args:
-            host_num (int): number of leaf hosts
-            bw (int): basic bandwidth of hosts
-            delay (int): delay for every link
-            loss (int): loss rate for every link
-            jitter (int): jitter for every link
+        # Create topology
+        self._create_layer(1, 3, 3)
 
-        Raises:
-            ValueError: if maximal link bandwidth larger than 1000Mbps
+    def _create_layer(self, layer_num, row_num, col_num):
+        """Create a single layer of nodes
+
+        MARK: Link parameters are hard coded.
         """
-
-        Topo.__init__(self, **opts)
-
-        s_index = 1  # init switch index
-        new_bw = host_bw
-        leaves = []
-
-        # create binary fat tree
-        # -------------------------------------------------
-        # generate leaves, each host connected to a switch
-        for h_index in range(host_num):
-            # add host with specified ip
-            leaves.append(
-                self.addHost('h' + str(h_index + 1),
-                             ip=make_ip(h_index + 1),
-                             mac=make_mac(h_index + 1))
-            )
-        todo = leaves  # singel host as leaves
-
-        # connect leaves
-        while len(todo) > 1:
-            new_todo = []
-            # each time connect two switches
-            for i in range(0, len(todo), 2):
-                # add switch with specified listenPort
+        ip_tpl = '10.%d.%d.%d'
+        host_tpl = 'h%d%d%d'
+        switch_tpl = 's%d%d%d'
+        switch_lt = []  # a list of all switches
+        # Create all hosts and switches, also connections between them
+        for row in range(1, row_num + 1):
+            for col in range(1, col_num + 1):
+                new_host = self.addHost(
+                    host_tpl % (layer_num, row, col),
+                    ip=ip_tpl % (layer_num, row, col),
+                    mac=make_mac(self.h_index + 1))
+                self.h_index += 1
                 new_switch = self.addSwitch(
-                    's' + str(s_index),
-                    **dict(listenPort=(13000 + s_index - 1))
+                    switch_tpl % (layer_num, row, col),
+                    **dict(listenPort=(13000 + self.s_index - 1))
                 )
+                self.addLink(new_host, new_switch, bw=1, delay='1ms')
+                self.s_index += 1
+                switch_lt.append(new_switch)
+        self.s_dict[layer_num] = switch_lt
 
-                s_index = s_index + 1
-                # add switch as new connected layer
-                new_todo.append(new_switch)
+        # Add links between switches, with circles
+        # for i in range(0, 9, 3):
+            # self.addLink(switch_lt[i], switch_lt[i + 1], bw=1, delay='1ms')
+            # self.addLink(switch_lt[i + 1], switch_lt[i + 2], bw=1, delay='1ms')
+            # self.addLink(switch_lt[i], switch_lt[i + 2], bw=1, delay='1ms')
+        # for i in range(3):
+            # self.addLink(switch_lt[i], switch_lt[i + 3], bw=1, delay='1ms')
+            # self.addLink(switch_lt[i + 3], switch_lt[i + 6], bw=1, delay='1ms')
+            # self.addLink(switch_lt[i], switch_lt[i + 6], bw=1, delay='1ms')
 
-                # add link with bandwidth and delay
-                self.addLink(todo[i], new_switch, bw=new_bw,
-                             delay=str(delay) + "ms", loss=int(loss),
-                             jitter=str(jitter) + "ms")
+        self.addLink(switch_lt[0], switch_lt[1], bw=1, delay='1ms')
 
-                if len(todo) > (i + 1):
-                    self.addLink(todo[i + 1], new_switch, bw=new_bw,
-                                 delay=str(delay) + "ms", loss=int(loss),
-                                 jitter=str(jitter) + "ms")
-            todo = new_todo
-            new_bw = new_bw * 2
-        # -------------------------------------------------
-
-        # define topo parameter dictionary
-        self.para_dict = {
-            'host_num': host_num,
-            'switch_num': len(self.switches()),
-            'host_bw': host_bw,
-            'link_delay': delay,
-            'link_loss': loss,
-            'link_jitter': jitter,
-        }
-
-        # check if parameter out of range
-        if self.get_maxbw() > 1000:
-            raise ValueError('warning: the maximum bandwidth \
-                             should not larger than 1000 Mbps')
-
-    def get_paradict(self):
-        """Get topology parameters dict
-
-        Returns:
-            self.para_dict (dict): dict of topology parameters
+    def _create_layer_connection(self, s_layer, d_layer, conn_num):
+        """Create conn_num of connections between s_layer and d_layer
         """
-        return self.para_dict
-
-    def get_treedepth(self):
-        """Get the depth of binary fattree
-
-        Returns:
-            tree_depth (int): depth of binary fattree
-        """
-        host_num = self.para_dict['host_num']
-
-        if (log(host_num, 2) - int(log(host_num, 2))) == 0:
-            tree_depth = int(log(host_num, 2))
-        else:
-            # if is not a full tree
-            tree_depth = int(log(host_num, 2)) + 1
-
-        return tree_depth
-
-    def get_maxbw(self):
-        """Get the maximal bandwith value in the fattree
-
-        the bandwidth of the root switch
-
-        Returns:
-            max_bw (int): the maximal bandwith
-        """
-        tree_depth = self.get_treedepth()
-        max_bw = int(self.para_dict['host_bw'] * pow(2, (tree_depth - 1)))
-        return max_bw
+        pass
 
     def switch_names(self):
-        """Get list of names for switches"""
+        """Get a list of names for all switches"""
         return ['s' + str(i + 1)
                 for i in range(len(self.switches()))]
 
     def node_names(self):
-        """Get list of names for all nodes"""
+        """Get a list of names for all nodes"""
         return self.hosts() + self.switch_names()
