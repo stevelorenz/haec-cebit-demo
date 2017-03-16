@@ -4,34 +4,52 @@
 # About  : Run demon
 """
 
+import argparse
+import logging
+import sys
+
 from MaxiNet.Frontend import maxinet
 from topo import MultilayerGrid
 
+logger = logging.getLogger(__name__)
 
 def main():
-    """Main function
 
-    For each test function, two important objects:
-        1. MaxiNet.Cluster: cluster of workers
-        2. Mininet.Topo: to be tested topology
-    """
+    # Dict for static mapping
+    # mapping = {"h1111": 0,
+               # "h2": 0,
+               # "h3": 1,
+               # "h4": 1,
+               # "s1": 0,
+               # "s2": 0,
+               # "s3": 1,
+               # "s4": 1,
+               # "s5": 0,
+               # "s6": 1,
+               # "s7": 1
+               # }
 
-    # Setup MaxiNet cluster
-    # Without arguments, returns all the registered Workers
     cluster = maxinet.Cluster()
     topo = MultilayerGrid()
 
-    # Setup MaxiNet experiment
     exp = maxinet.Experiment(cluster, topo)
+    # exp = maxinet.Experiment(cluster, topo, nodemapping=mapping)
     exp.setup()
 
-    # Into CLI mode, for debugging
-    exp.CLI(locals(), globals())
-    exp.stop()
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '-d':
+            # Into the CLI mode, for debugging
+            exp.CLI(locals(), globals())
+            exp.stop()
+    else:
+        logger.info('*** Nothing happens!')
 
 
 def run_demon():
-    """Run demon operations."""
+    """Run demon operations.
+
+    Each node should run ./iperf-server-client-demo script
+    """
     pass
 
 
