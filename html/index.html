@@ -9,9 +9,17 @@
 <body>
     <div ng-controller="Topology">
         <svg width="800" height="800">
-            <path class="link" ng-repeat="l in links" ng-attr-d="{{l.path}}"/>
-            <path class="flow" ng-repeat="f in flows" ng-attr-d="{{f.path}}" ng-attr-stroke="{{f.color}}"/>
-            <circle class="switch" r="10" ng-repeat="s in switches" ng-attr-cx="{{(s.x*4 + s.y)*scale}}" ng-attr-cy="{{(s.z*4 - s.y)*scale}}"/>
+            <g class="link">
+                <path ng-repeat="l in links track by l.ifname" ng-attr-d="{{l.path}}"/>
+            </g>
+            <g class="flow" ng-repeat="f in flows track by f.id" ng-attr-stroke="{{f.color}}">
+                <path ng-repeat="h in f.hops track by h.id" ng-attr-d="{{h.path}}"/>
+            </g>
+            <g class="switch">
+                <circle r="10" ng-repeat="s in switches track by s.dpid"
+                ng-attr-cx="{{(s.x*4 + s.y)*scale}}"
+                ng-attr-cy="{{(s.z*4 - s.y)*scale}}"/>
+            </g>
         </svg>
     </div>
 </body>

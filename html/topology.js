@@ -1,6 +1,9 @@
 angular.module("topology", []).controller("Topology", function($scope, $http, $timeout) {
 
     $scope.scale = 50;
+    $scope.switches = [];
+    $scope.links = [];
+    $scope.flows = [];
 
     function switchPos(name, offset) {
             var x = parseInt(name[offset+2]);
@@ -31,30 +34,14 @@ angular.module("topology", []).controller("Topology", function($scope, $http, $t
         return "M"+start+" C"+cstart+" " +cend+" "+end;
     }
 
-    function ip_to_number(ip) {
-        var parts = ip.split(".");
-        var x = parseInt(parts[3])-1;
-        var y = parseInt(parts[2])-1;
-        var z = parseInt(parts[1])-1;
-
-        return x + y*3 + z*9;
-    }
-
-    function hue(flow) {
-        var srcval = (ip_to_number(flow.src)*19)%27;
-        var dstval = (ip_to_number(flow.dst)*23)%27;
-        var val = srcval+dstval*27;
-        var norm = val/(27*27);
-
-        return 360*val/(27*27);
-    }
-
     $http({
         method: "GET",
         url: "v1.0/topology/switches"
     }).then(function(response) {
-        $scope.switches = response.data.map(function (s) {
-            return switchPos(s.dpid,13);
+        $scope.switches = response.data.map(function (data) {
+            var s = switchPos(data.dpid,13);
+            s.dpid = data.dpid;
+            return s;
         });
 
         $scope.links = Array.prototype.concat.apply([], response.data.map(function (s) {
@@ -63,6 +50,7 @@ angular.module("topology", []).controller("Topology", function($scope, $http, $t
                 var dst = switchPos(p.name,6);
 
                 return {
+                    ifname: p.name,
                     src: src,
                     dst: dst,
                     path: curve(src, dst)
@@ -78,20 +66,37 @@ angular.module("topology", []).controller("Topology", function($scope, $http, $t
             method: "GET",
             url: "v1.0/flows"
         }).then(function(response) {
-            $scope.flows = Object.keys(response.data).map(function (id) {
-                var flow = response.data[id];
-                var ifname = flow.ifname;
+            $scope.flows = Object.keys(response.data).reduce(function (flows, hopid) {
+                var hop = response.data[hopid];
+                var flowid = hop.src + "->" + hop.dst;
+                var flow = flows.find(function (f) { return f.id == flowid; });
+                if (!flow) {
+                    flow = $scope.flows.find(function (f) { return f.id == flowid; });
+                    if (flow) {
+                        flow.hops = [];
+                    } else {
+                        flow = {
+                            id: flowid,
+                            hops: [],
+                            color: "hsl("+(360*Math.random())+", 100%, 50%)"
+                        };
+                    }
+                    flows.push(flow);
+                }
 
+                var ifname = hop.ifname;
                 var src = switchPos(ifname, 1);
                 var dst = switchPos(ifname, 6);
 
-                return {
+                flow.hops.push({
+                    id: ifname,
                     src: src,
                     dst: dst,
-                    path: curve(src, dst),
-                    color: "hsl("+hue(flow)+", 100%, 50%)"
-                };
-            });
+                    path: curve(src, dst)
+                });
+
+                return flows;
+            }, []);
         });
 
         setTimeout(refresh, 1000);
