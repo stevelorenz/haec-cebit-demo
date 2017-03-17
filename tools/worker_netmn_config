@@ -1,9 +1,10 @@
-# NetworkManger connection setting format on Worker
+# About: NetworkManger ethernet connection config for Workers
 
 [connection]
 id=ethernet_connection
 type=ethernet
 
+# Auto connect with highest priority
 autoconnect=true
 autoconnect-priority=0
 
