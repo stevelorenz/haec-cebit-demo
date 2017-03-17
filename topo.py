@@ -112,7 +112,7 @@ class MultilayerGrid(Topo):
                     # select current node
                     sname = 's%d%d%d' % (i + 1, j + 1, k + 1)
                     # randomly select other nodes
-                    for n in ['s%d%d%d' % (1 + (i + 1) % 3, randint(1, 3), randint(1, 3)), 's%d%d%d' % (1 + (i + 4) % 3, randint(1, 3), randint(1, 3))]:
+                    for n in ['s%d%d%d' % (1 + (i + 1) % 3, randint(1, 3), randint(1, 3)), 's%d%d%d' % (1 + (i + 2) % 3, randint(1, 3), randint(1, 3))]:
                         if not n + "-" + sname in links:
                             links[sname + "-" + n] = True
                             links[n + "-" + sname] = True

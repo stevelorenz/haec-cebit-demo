@@ -65,7 +65,7 @@ def haecnet():
                 s = net[sname]
 
                 # randomly select other nodes
-                for n in ['s%d%d%d'%(1+(i+1)%3, randint(1,3),randint(1,3)), 's%d%d%d'%(1+(i+4)%3,randint(1,3),randint(1,3))]:
+                for n in ['s%d%d%d'%(1+(i+1)%3, randint(1,3),randint(1,3)), 's%d%d%d'%(1+(i+2)%3,randint(1,3),randint(1,3))]:
                     if not n+"-"+sname in links:
                         links[sname+"-"+n] = True
                         links[n+"-"+sname] = True
