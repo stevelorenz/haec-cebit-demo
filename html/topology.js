@@ -21,7 +21,7 @@ angular.module("topology", []).controller("Topology", function($scope, $http, $t
         var end = endx+","+endy;
 
         var shift = 0;
-        if (src.z == dst.z && Math.abs(src.x - dst.x) > 1 || Math.abs(src.y - dst.y) > 1) {
+        if (src.z == dst.z && (Math.abs(src.x - dst.x) > 1 || Math.abs(src.y - dst.y) > 1)) {
             shift = 50;
         }
 
