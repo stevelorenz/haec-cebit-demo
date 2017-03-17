@@ -26,7 +26,7 @@ $ PYTHONPATH=. ./bin/ryu run \
 3. Access http://<ip address of ryu host>:8080 with your web browser.
 """
 
-import os, json
+import os, json, random
 
 from webob.static import DirectoryApp
 
@@ -107,19 +107,16 @@ class HaecApp(app_manager.RyuApp):
         curpos = dpid_to_str(dp.id)[-3:]
         dstpos = "".join(ip.split(".")[-3:])
 
-        # check if we are on the same layer
-        if curpos[0] != dstpos[0]:
-            # pick a random link that switches to the destination layer
-            next_hops = [p for p in ports if p.name[-3] == dstpos[0]]
-        elif curpos[1] != dstpos[1]:
-            next_hops = [p for p in ports if p.name[-2] == dstpos[1]]
-        elif curpos[2] != dstpos[2]:
-            next_hops = [p for p in ports if p.name[-1] == dstpos[2]]
-        else:
-            next_hops = [p for p in ports if p.name[-3:] == dstpos]
+        for i in range(3):
+            ports = [p for p in ports if p.name[-3+i] == dstpos[i]]
+            print(i, dpid_to_str(dp.id), ip, [h.name for h in ports])
+            if curpos[i] != dstpos[i]:
+                break
 
-        if len(next_hops) > 0:
-            return (next_hops[0].port_no, next_hops[0].name)
+        if len(ports) > 0:
+            print("done", dpid_to_str(dp.id), ip, [h.name for h in ports])
+            hop = random.choice(ports)
+            return (hop.port_no, hop.name)
         else:
             return (None, "DROP")
 
