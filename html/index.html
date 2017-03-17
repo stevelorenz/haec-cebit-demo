@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html ng-app="topology">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="topology.css">
+<script src="angular.min.js" charset="utf-8"></script>
+<script src="topology.js" charset="utf-8"></script>
+</head>
+<body>
+    <div ng-controller="Topology">
+        <svg width="800" height="800">
+            <path class="link" ng-repeat="l in links" ng-attr-d="{{l.path}}"/>
+            <path class="flow" ng-repeat="f in flows" ng-attr-d="{{f.path}}" ng-attr-stroke="{{f.color}}"/>
+            <circle class="switch" r="10" ng-repeat="s in switches" ng-attr-cx="{{(s.x*4 + s.y)*scale}}" ng-attr-cy="{{(s.z*4 - s.y)*scale}}"/>
+        </svg>
+    </div>
+</body>
+</html>
