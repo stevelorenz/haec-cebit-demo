@@ -62,7 +62,7 @@ class HaecApp(app_manager.RyuApp):
     def get_flows(self):
         return self.flows
 
-    def add_flow(self, dp, srcip, dstip, out_port):
+    def add_flow(self, dp, srcip, dstip, out_port, ifname):
         ofp = dp.ofproto
         ofp_parser = dp.ofproto_parser
 
@@ -87,13 +87,13 @@ class HaecApp(app_manager.RyuApp):
             cookie=cookie, # can be used to identify the flow
             idle_timeout=10, hard_timeout=0, # the flow entry never times out
             priority=ofp.OFP_DEFAULT_PRIORITY,
-            flags=0, # here we could decide to handle flow removal messages
+            flags=ofp.OFPFF_SEND_FLOW_REM,
             actions=actions)
 
         # send it to the switch
         dp.send_msg(flow)
 
-        self.flows[cookie] = {"dpid": dpid_to_str(dp.id), "port": out_port, "src": srcip, "dst": dstip}
+        self.flows[cookie] = {"dpid": dpid_to_str(dp.id), "port": out_port, "src": srcip, "dst": dstip, "ifname": ifname}
 
     def port_from_ip(self, dp, ip):
         from ryu.topology.api import get_switch, get_link, get_host
@@ -110,25 +110,24 @@ class HaecApp(app_manager.RyuApp):
         # check if we are on the same layer
         if curpos[0] != dstpos[0]:
             # pick a random link that switches to the destination layer
-            next_hops = [p.port_no for p in ports if p.name[-3] == dstpos[0]]
+            next_hops = [p for p in ports if p.name[-3] == dstpos[0]]
         elif curpos[1] != dstpos[1]:
-            next_hops = [p.port_no for p in ports if p.name[-2] == dstpos[1]]
+            next_hops = [p for p in ports if p.name[-2] == dstpos[1]]
         elif curpos[2] != dstpos[2]:
-            next_hops = [p.port_no for p in ports if p.name[-1] == dstpos[2]]
+            next_hops = [p for p in ports if p.name[-1] == dstpos[2]]
         else:
-            next_hops = [p.port_no for p in ports if p.name[-3:] == dstpos]
+            next_hops = [p for p in ports if p.name[-3:] == dstpos]
 
         if len(next_hops) > 0:
-            return next_hops[0]
+            return (next_hops[0].port_no, next_hops[0].name)
         else:
-            return ofp.OFPP_FLOOD
+            return (ofp.OFPP_FLOOD, "FLOOD")
 
     @set_ev_cls(ofp_event.EventOFPFlowRemoved, MAIN_DISPATCHER)
     def flow_removed_handler(self, ev):
         msg = ev.msg
         dp = msg.datapath
         ofp = dp.ofproto
-
 
         if msg.cookie in self.flows:
             del self.flows[msg.cookie]
@@ -149,10 +148,10 @@ class HaecApp(app_manager.RyuApp):
             return
 
         if arppkt:
-            out_port = self.port_from_ip(dp, arppkt.dst_ip)
+            out_port, _ = self.port_from_ip(dp, arppkt.dst_ip)
         elif ip:
-            out_port = self.port_from_ip(dp, ip.dst)
-            self.add_flow(dp, ip.src, ip.dst, out_port)
+            out_port, ifname = self.port_from_ip(dp, ip.dst)
+            self.add_flow(dp, ip.src, ip.dst, out_port, ifname)
         else:
             self.logger.debug('Message for unknown: %s' % msg)
             out_port = ofp.OFPP_FLOOD
