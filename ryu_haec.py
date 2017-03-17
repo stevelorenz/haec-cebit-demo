@@ -121,7 +121,7 @@ class HaecApp(app_manager.RyuApp):
         if len(next_hops) > 0:
             return (next_hops[0].port_no, next_hops[0].name)
         else:
-            return (ofp.OFPP_FLOOD, "FLOOD")
+            return (None, "DROP")
 
     @set_ev_cls(ofp_event.EventOFPFlowRemoved, MAIN_DISPATCHER)
     def flow_removed_handler(self, ev):
@@ -154,10 +154,14 @@ class HaecApp(app_manager.RyuApp):
             self.add_flow(dp, ip.src, ip.dst, out_port, ifname)
         else:
             self.logger.debug('Message for unknown: %s' % msg)
-            out_port = ofp.OFPP_FLOOD
+            out_port = None
             return
 
-        actions = [ofp_parser.OFPActionOutput(out_port)]
+        if out_port:
+            actions = [ofp_parser.OFPActionOutput(out_port)]
+        else:
+            actions = []
+
         out = ofp_parser.OFPPacketOut(datapath=dp, buffer_id=msg.buffer_id, in_port=msg.in_port, actions=actions)
         dp.send_msg(out)
 
