@@ -1,21 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-# About  : Run demon
+# About  : Setup and run HAEC demo.
+# Contact: xianglinks@gmail.com
 """
 
-import argparse
 import logging
 import sys
+import time
 
 from MaxiNet.Frontend import maxinet
 from topo import MultilayerGrid
 
 logger = logging.getLogger(__name__)
 
+
+###################
+#  Main Function  #
+###################
+
 def main():
 
     # Dict for static mapping
+    for i in range(3):
+        for j in range(3):
+            for k in range(3):
+                pass
+
     # mapping = {"h1111": 0,
                # "h2": 0,
                # "h3": 1,
@@ -29,6 +40,7 @@ def main():
                # "s7": 1
                # }
 
+    # Create cluster and topology
     cluster = maxinet.Cluster()
     topo = MultilayerGrid()
 
@@ -41,24 +53,25 @@ def main():
             # Into the CLI mode, for debugging
             exp.CLI(locals(), globals())
             exp.stop()
+
+    # Start Iperf script on all hosts.
     else:
-        logger.info('*** Nothing happens!')
+        time.sleep(1)
+        # Loop over all hosts
+        for i in range(3):
+            for j in range(3):
+                for k in range(3):
+                    hname = 'h%d%d%d' % (i + 1, j + 1, k + 1)
+                    # Run go script at background
+                    exp.get_node(hname).cmd("~/bin/iperf-server-client-demo-pc -min 30 -max 40 &")
 
-
-def run_demon():
-    """Run demon operations.
-
-    Each node should run ./iperf-server-client-demo script
-    """
-    pass
-
-
-def ping_all(exp, host_lt, ping_num=3):
-    """Simple ping all host."""
-    for sender in host_lt:
-        for recv in host_lt:
-            recv_ip = exp.get_node(recv).IP()
-            exp.get_node(sender).cmd("ping -c %d %s" % (ping_num, recv_ip))
+    # Enter infinite loop
+    try:
+        while 1:
+            time.sleep(10)
+    except KeyboardInterrupt:
+        print('KeyboardInterrupt detected!')
+        exp.stop()
 
 if __name__ == "__main__":
     main()

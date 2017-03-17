@@ -9,6 +9,7 @@
 
 import logging
 import random
+from random import randint
 
 from mininet.topo import Topo
 
@@ -100,65 +101,20 @@ class MultilayerGrid(Topo):
         # TODO: Connect them properly
         # MARK: All node in each layer MUST have at least one direct connection to all other layers.
 
-        # Connect layer 1 and 2
-        for s_index in range(9):
-            s_sw = self.switch_dict[1][s_index]
-            # Random choose a switch in another layer
-            e_sw = random.choice(self.switch_dict[2])
-            self.addLink(s_sw, e_sw, bw=1,
-                         intfName1=s_sw + '-' + e_sw,
-                         intfName2=e_sw + '-' + s_sw)
-            print('Add a link between %s and %s.' % (s_sw, e_sw))
-            s_sw = self.switch_dict[2][s_index]
-            # Random choose a switch in another layer
-            e_sw = random.choice(self.switch_dict[1])
-            self.addLink(s_sw, e_sw, bw=1,
-                         intfName1=s_sw + '-' + e_sw,
-                         intfName2=e_sw + '-' + s_sw)
-            print('Add a link between %s and %s.' % (s_sw, e_sw))
+        # switch_lt = []
+        # for layer in range(1, 4):
+            # switch_lt.extend(self.switch_dict[layer])
 
-        # Connect layer 2 and 3
-        for s_index in range(9):
-            s_sw = self.switch_dict[2][s_index]
-            # Random choose a switch in another layer
-            e_sw = random.choice(self.switch_dict[3])
-            self.addLink(s_sw, e_sw, bw=1,
-                         intfName1=s_sw + '-' + e_sw,
-                         intfName2=e_sw + '-' + s_sw)
-            print('Add a link between %s and %s.' % (s_sw, e_sw))
-
-            s_sw = self.switch_dict[3][s_index]
-            # Random choose a switch in another layer
-            e_sw = random.choice(self.switch_dict[2])
-            self.addLink(s_sw, e_sw, bw=1,
-                         intfName1=s_sw + '-' + e_sw,
-                         intfName2=e_sw + '-' + s_sw)
-            print('Add a link between %s and %s.' % (s_sw, e_sw))
-
-        # Connect layer 1 and 3
-        for s_index in range(9):
-            s_sw = self.switch_dict[1][s_index]
-            # Random choose a switch in another layer
-            e_sw = random.choice(self.switch_dict[3])
-            self.addLink(s_sw, e_sw, bw=1,
-                         intfName1=s_sw + '-' + e_sw,
-                         intfName2=e_sw + '-' + s_sw)
-            print('Add a link between %s and %s.' % (s_sw, e_sw))
-
-            s_sw = self.switch_dict[3][s_index]
-            # Random choose a switch in another layer
-            e_sw = random.choice(self.switch_dict[1])
-            self.addLink(s_sw, e_sw, bw=1,
-                         intfName1=s_sw + '-' + e_sw,
-                         intfName2=e_sw + '-' + s_sw)
-            print('Add a link between %s and %s.' % (s_sw, e_sw))
+        links = {}
+        for i in range(3):
+            for j in range(3):
+                for k in range(3):
+                    # select current node
+                    sname = 's%d%d%d' % (i + 1, j + 1, k + 1)
+                    # randomly select other nodes
+                    for n in ['s%d%d%d' % (1 + (i + 1) % 3, randint(1, 3), randint(1, 3)), 's%d%d%d' % (1 + (i + 4) % 3, randint(1, 3), randint(1, 3))]:
+                        if not n + "-" + sname in links:
+                            links[sname + "-" + n] = True
+                            links[n + "-" + sname] = True
+                            self.addLink(sname, n, intfName1=sname + "-" + n, intfName2=n + "-" + sname, bw=1)
         # --------------------------------------------------
-
-    def switch_names(self):
-        """Get a list of names for all switches"""
-        return ['s' + str(i + 1)
-                for i in range(len(self.switches()))]
-
-    def node_names(self):
-        """Get a list of names for all nodes"""
-        return self.hosts() + self.switch_names()

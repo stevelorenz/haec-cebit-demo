@@ -24,11 +24,11 @@ errcheck: $(PYSRC)
 
 build-iperf-demo-pc: ./iperf-server-client-demo.go
 	@echo "Build the Iperf-server-client-demo for pc."
-	go build ./iperf-server-client-demo.go
+	go build -v -o ./iperf-server-client-demo-pc ./iperf-server-client-demo.go
 
 build-iperf-demo-odroid: ./iperf-server-client-demo.go
 	@echo "Build the Iperf-server-client-demo for odroid."
-	GOOS=linux GOARCH=arm GOARM=7 go build -v ./iperf-server-client-demo.go
+	GOOS=linux GOARCH=arm GOARM=7 go build -v -o ./iperf-server-client-demo-odroid ./iperf-server-client-demo.go
 
 clean:
 	@echo "Clean tmp file."
