@@ -6,21 +6,20 @@
 <script src="angular.min.js" charset="utf-8"></script>
 <script src="topology.js" charset="utf-8"></script>
 </head>
-<body>
-    <div ng-controller="Topology">
-        <svg width="800" height="800">
-            <g class="link">
-                <path ng-repeat="l in links track by l.ifname" ng-attr-d="{{l.path}}"/>
-            </g>
-            <g class="flow" ng-repeat="f in flows track by f.id" ng-attr-stroke="{{f.color}}">
-                <path ng-repeat="h in f.hops track by h.id" ng-attr-d="{{h.path}}"/>
-            </g>
-            <g class="switch">
-                <circle r="10" ng-repeat="s in switches track by s.dpid"
-                ng-attr-cx="{{(s.x*4 + s.y)*scale}}"
-                ng-attr-cy="{{(s.z*4 - s.y)*scale}}"/>
-            </g>
-        </svg>
-    </div>
+<body ng-controller="Topology">
+    <h2>HAEC Topology</h2>
+    <svg width="600" height="600">
+        <g class="link">
+            <path ng-repeat="l in links track by l.ifname" ng-attr-d="{{l.path}}"/>
+        </g>
+        <g class="flow" ng-repeat="f in flows track by f.id" ng-attr-stroke="{{f.color}}">
+            <path ng-repeat="h in f.hops track by h.id" ng-attr-d="{{h.path}}"/>
+        </g>
+        <g class="switch">
+            <circle r="10" ng-repeat="s in switches track by s.dpid"
+            ng-attr-cx="{{(s.x*4-4 + s.y)*scale}}"
+            ng-attr-cy="{{(s.z*4 - s.y)*scale}}"/>
+        </g>
+    </svg>
 </body>
 </html>
