@@ -13,7 +13,7 @@
             <path ng-repeat="l in links track by l.ifname" ng-attr-d="{{l.path}}"/>
         </g>
         <g class="flow" ng-repeat="f in flows track by f.id" ng-attr-stroke="{{f.color}}">
-            <path ng-repeat="h in f.hops track by h.id" ng-attr-d="{{h.path}}"/>
+            <path ng-repeat="h in f.hops track by h.id" ng-attr-d="{{h.path}}" ng-class="{'dashed': h.src.z != h.dst.z}"/>
         </g>
         <g class="switch">
             <circle r="10" ng-repeat="s in switches track by s.dpid"
