@@ -109,12 +109,10 @@ class HaecApp(app_manager.RyuApp):
 
         for i in range(3):
             ports = [p for p in ports if p.name[-3+i] == dstpos[i]]
-            print(i, dpid_to_str(dp.id), ip, [h.name for h in ports])
             if curpos[i] != dstpos[i]:
                 break
 
         if len(ports) > 0:
-            print("done", dpid_to_str(dp.id), ip, [h.name for h in ports])
             hop = random.choice(ports)
             return (hop.port_no, hop.name)
         else:

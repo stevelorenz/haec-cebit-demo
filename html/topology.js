@@ -15,11 +15,11 @@ angular.module("topology", []).controller("Topology", function($scope, $http, $t
     }
 
     function curve(src, dst) {
-        var startx = (src.x*4 + src.y)*$scope.scale;
+        var startx = (src.x*4-4 + src.y)*$scope.scale;
         var starty = (src.z*4 - src.y)*$scope.scale;
         var start = startx+","+starty;
 
-        var endx = (dst.x*4 + dst.y)*$scope.scale;
+        var endx = (dst.x*4-4 + dst.y)*$scope.scale;
         var endy = (dst.z*4 - dst.y)*$scope.scale;
         var end = endx+","+endy;
 
@@ -77,6 +77,8 @@ angular.module("topology", []).controller("Topology", function($scope, $http, $t
                     } else {
                         flow = {
                             id: flowid,
+                            src: hop.src,
+                            dst: hop.dst,
                             hops: [],
                             color: "hsl("+(360*Math.random())+", 100%, 50%)"
                         };
