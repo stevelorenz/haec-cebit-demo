@@ -77,6 +77,8 @@ angular.module("topology", []).controller("Topology", function($scope, $http, $t
                     } else {
                         flow = {
                             id: flowid,
+                            src: hop.src,
+                            dst: hop.dst,
                             hops: [],
                             color: "hsl("+(360*Math.random())+", 100%, 50%)"
                         };

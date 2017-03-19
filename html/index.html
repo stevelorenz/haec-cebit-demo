@@ -21,5 +21,11 @@
             ng-attr-cy="{{(s.z*4 - s.y)*scale}}"/>
         </g>
     </svg>
+    <h2>Flow Table</h2>
+    <ul class="flow-table">
+        <li ng-repeat="f in flows track by f.id" class="flow-entry" ng-style="{'background-color': f.color}">
+            From {{f.src}} to {{f.dst}}
+        </li>
+    </ul>
 </body>
 </html>

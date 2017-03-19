@@ -6,6 +6,8 @@
 
 .flow-table {
     list-style: none;
+    width: 400px;
+    padding: 4px;
 }
 
 .flow-entry {
