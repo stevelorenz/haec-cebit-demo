@@ -1,31 +1,47 @@
 <!DOCTYPE html>
 <html ng-app="topology">
-<head>
-<meta charset="utf-8">
-<link rel="stylesheet" type="text/css" href="topology.css">
-<script src="angular.min.js" charset="utf-8"></script>
-<script src="topology.js" charset="utf-8"></script>
-</head>
-<body ng-controller="Topology">
-    <h2>HAEC Topology</h2>
-    <svg width="600" height="600">
-        <g class="link">
-            <path ng-repeat="l in links track by l.ifname" ng-attr-d="{{l.path}}"/>
-        </g>
-        <g class="flow" ng-repeat="f in flows track by f.id" ng-attr-stroke="{{f.color}}">
-            <path ng-repeat="h in f.hops track by h.id" ng-attr-d="{{h.path}}" ng-class="{'dashed': h.src.z != h.dst.z}"/>
-        </g>
-        <g class="switch">
-            <circle r="10" ng-repeat="s in switches track by s.dpid"
-            ng-attr-cx="{{(s.x*4-4 + s.y)*scale}}"
-            ng-attr-cy="{{(s.z*4 - s.y)*scale}}"/>
-        </g>
-    </svg>
-    <h2>Flow Table</h2>
-    <ul class="flow-table">
-        <li ng-repeat="f in flows track by f.id" class="flow-entry" ng-style="{'background-color': f.color}">
-            From {{f.src}} to {{f.dst}}
-        </li>
-    </ul>
-</body>
+	<style>
+		.vertical-margin {
+			margin-bottom: 1cm;
+		}
+	</style>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="topology.css">
+		<script src="angular.min.js" charset="utf-8"></script>
+		<script src="topology.js" charset="utf-8"></script>
+	</head>
+	<body ng-controller="Topology">
+		<!-- Logos -->
+		<div style="width:auto ; background-color:white; height:120px">
+			<div style="width:auto; height: 150px;">
+				<img src="HAEC_Logo_rgb.jpg" width="auto" height="100" alt="HAEC logo"/>
+				<img src="cfaed_RGB_Quadrat_Cut.jpg" width="auto" height="100" alt="CFAED"/>
+				<img src="5G_Germany_Logo.png" width="auto" height="100" alt="5G Lab Germany"/>
+			</div>
+		</div>
+		<p class="vertical-margin"></p>
+		<!-- Title Part -->
+		<h1>HAEC Topology</h1>
+		<!-- Topology and Flow Table -->
+		<svg width="600" height="600">
+			<g class="link">
+				<path ng-repeat="l in links track by l.ifname" ng-attr-d="{{l.path}}"/>
+			</g>
+			<g class="flow" ng-repeat="f in flows track by f.id" ng-attr-stroke="{{f.color}}">
+				<path ng-repeat="h in f.hops track by h.id" ng-attr-d="{{h.path}}" ng-class="{'dashed': h.src.z != h.dst.z}"/>
+			</g>
+			<g class="switch">
+				<circle r="10" ng-repeat="s in switches track by s.dpid"
+				ng-attr-cx="{{(s.x*4-4 + s.y)*scale}}"
+				ng-attr-cy="{{(s.z*4 - s.y)*scale}}"/>
+			</g>
+		</svg>
+		<h2>Flow Table</h2>
+		<ul class="flow-table">
+			<li ng-repeat="f in flows track by f.id" class="flow-entry" ng-style="{'background-color': f.color}">
+				From {{f.src}} to {{f.dst}}
+			</li>
+		</ul>
+	</body>
 </html>
